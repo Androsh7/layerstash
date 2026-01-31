@@ -1,0 +1,11 @@
+# VSCode
+.vscode/
+
+# Python
+__pycache__/
+*.egg-info
+.venv/
+
+# Project
+chunks/
+*.tar

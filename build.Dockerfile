@@ -1,0 +1,5 @@
+FROM scratch
+ARG SOURCE_FILE
+ARG DESTINATION_FILE
+WORKDIR /data
+COPY ${SOURCE_FILE} /data/data_file
