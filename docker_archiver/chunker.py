@@ -17,7 +17,7 @@ def chunk_file(input_file_path: Path, output_file_path: Path, read_bytes: int, b
         read_bytes: The number of bytes to read
         byte_offset: The byte offset to start reading at
     """
-    logger.info(f"Creating chunk {output_file_path} from {input_file_path} at byte offset {byte_offset}")
+    logger.debug(f"Creating chunk {output_file_path} from {input_file_path} at byte offset {byte_offset}")
     with open(file=input_file_path, mode="rb") as input_file:
         input_file.seek(byte_offset)
         with open(file=output_file_path, mode="wb") as output_file:
