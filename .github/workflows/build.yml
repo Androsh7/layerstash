@@ -1,4 +1,4 @@
-name: Build WhereMyTunnels
+name: Build Layerstash
 
 on:
   workflow_dispatch:
