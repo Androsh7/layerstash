@@ -17,7 +17,7 @@ from docker_archiver.docker_api_models import (
     ManifestLayer,
     calculate_sha256_digest_from_file,
 )
-from docker_archiver.utils import humanize_bytes, sha256_file_hash
+from docker_archiver.utils import humanize_bytes
 
 
 def push_image(file_path: Path, tag_name: str, progress_bar_description: str):

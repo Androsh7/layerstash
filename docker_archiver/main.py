@@ -19,7 +19,7 @@ def main():
 
     # Primary parser
     parser = argparse.ArgumentParser(prog="docker_archiver")
-    
+
     # Common args
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument("--version", action="version", version=f"Docker Archiver v{VERSION}")
@@ -27,9 +27,7 @@ def main():
         "--log-level", type=str, choices=LOG_LEVELS, default="info", help="Set the application log level"
     )
     common_parser.add_argument("-n", "--namespace", required=True, type=str, help="Namespace for the docker account")
-    common_parser.add_argument(
-        "-r", "--repository", required=True, type=str, help="Name of the remote repository"
-    )
+    common_parser.add_argument("-r", "--repository", required=True, type=str, help="Name of the remote repository")
     common_parser.add_argument(
         "-t",
         "--base-tag",
@@ -38,18 +36,23 @@ def main():
         help='The base tag, I.E: "python-ftp" , each chunk will have "-<INDEX>" appended to the end',
     )
     common_parser.add_argument("--token", required=True, type=str, help="Docker PAT token")
-    
+
     # Add subparsers
     subparsers = parser.add_subparsers(title="commands", dest="command", required=True)
 
     # Upload parser
-    upload_parser = subparsers.add_parser("upload", parents=[common_parser], help="Upload a file as a series of images to docker hub")
+    upload_parser = subparsers.add_parser(
+        "upload", parents=[common_parser], help="Upload a file as a series of images to docker hub"
+    )
     upload_parser.add_argument("-i", "--infile", required=True, type=Path, help="The file to upload")
-    upload_parser.add_argument("--overwrite", action="store_true", help="Overwrite existing images if they have a different hash")
-
+    upload_parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite existing images if they have a different hash"
+    )
 
     # Download parser
-    download_parser = subparsers.add_parser("download", parents=[common_parser], help="Download a file from a series of images from docker hub")
+    download_parser = subparsers.add_parser(
+        "download", parents=[common_parser], help="Download a file from a series of images from docker hub"
+    )
     download_parser.add_argument(
         "-o", "--outfile", required=True, type=Path, help="The file to write the downloaded chunks to"
     )

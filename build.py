@@ -10,7 +10,7 @@ PARENT_DIRECTORY = Path(__file__).parent
 
 def build_linux():
     subprocess.run(
-        "docker run --name nuitka-compiler --detach androsh7/nuitka-compiler:latest-x86_64-glibc-2.17-py3.13 sleep infinity "
+        "docker run --name nuitka-compiler --detach androsh7/nuitka-compiler:latest-x86_64-glibc-2.28-py3.13 sleep infinity "
         "&& docker cp docker_archiver nuitka-compiler:/src/docker_archiver "
         "&& docker cp pyproject.toml nuitka-compiler:/src/pyproject.toml "
         "&& docker exec nuitka-compiler python3 -m pip install . "
@@ -27,6 +27,7 @@ def build_linux():
         check=True,
     )
 
+
 def build_windows():
     subprocess.run(
         "nuitka "
@@ -39,6 +40,7 @@ def build_windows():
         shell=True,
         check=True,
     )
+
 
 def main():
     """Main logic"""
@@ -54,6 +56,7 @@ def main():
         build_linux()
     if not args.linux and not args.windows and not args.build_all:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()
