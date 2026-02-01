@@ -38,7 +38,7 @@ def push_image(file_path: Path, tag_name: str, progress_bar_description: str):
             return None
         if not config.overwrite_image:
             os.remove(file_path)
-            raise ValueError(f"Remove image {tag_name} already exists, with different hash")
+            raise ValueError(f"Remote image {tag_name} already exists, with different hash")
         print(f"Overwriting image {tag_name}")
 
     # Push blob config

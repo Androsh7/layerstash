@@ -128,6 +128,7 @@ def push_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
         data=tqdm_file_reader,
         timeout=timeout,
     )
+    tqdm_file_reader.close()
 
     if upload_response.status_code not in (HTTPStatus.CREATED, HTTPStatus.ACCEPTED):
         raise DockerException(f"File upload failed: {upload_response.status_code} {upload_response.text}")

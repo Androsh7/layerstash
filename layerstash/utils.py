@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # Project libraries
-from constants import DEFAULT_HASH_CHUNK_SIZE, DEFAULT_READER_CHUNK_SIZE
+from layerstash.constants import DEFAULT_HASH_CHUNK_SIZE, DEFAULT_READER_CHUNK_SIZE
 
 # Third-party libraries
 from tqdm import tqdm
@@ -39,8 +39,6 @@ def sha256_file_hash(file_path: Path, show_progress: bool = False, chunk_size: i
 
     with open(file=file_path, mode="rb", buffering=0) as file:
         while True:
-            hash.update(file.read(chunk_size))
-
             chunk = file.read(chunk_size)
             if not chunk:
                 break
