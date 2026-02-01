@@ -1,0 +1,60 @@
+name: Build WhereMyTunnels
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build-windows:
+    name: Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build
+        run: |
+          mkdir dist
+          python build.py --windows
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: layerstash-windows-x86_64.exe
+          path: layerstash.exe
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux (x86_64 glibc 2.28)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build
+        run: |
+          python build.py --linux
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: layerstash-linux-x86_64-glibc-2.28.bin
+          path: layerstash.bin
+          if-no-files-found: error
