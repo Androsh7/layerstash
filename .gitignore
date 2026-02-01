@@ -6,6 +6,10 @@ __pycache__/
 *.egg-info
 .venv/
 
+# Nuitka
+*.bin
+*.exe
+
 # Project
 chunks/
 *.tar

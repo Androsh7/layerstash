@@ -3,90 +3,99 @@
 # Standard libraries
 import math
 import os
-import subprocess
-import hashlib
 from pathlib import Path
-
-# Third-party libraries
-from loguru import logger
-from tqdm import tqdm
 
 # Project libraries
 from docker_archiver.chunker import chunk_file
-from docker_archiver.constants import CHUNK_DIRECTORY, DEFAULT_CHUNK_SIZE, DOCKERFILE_PATH, config
-from docker_archiver.utils import sha256_file_hash
+from docker_archiver.constants import CHUNK_DIRECTORY, DEFAULT_CHUNK_SIZE, config
+from docker_archiver.docker_api import get_manifest, push_blob_config, push_blob_file, push_manifest
+from docker_archiver.docker_api_models import (
+    Blob,
+    BlobRootFS,
+    Manifest,
+    ManifestConfig,
+    ManifestLayer,
+    calculate_sha256_digest_from_file,
+)
+from docker_archiver.utils import humanize_bytes, sha256_file_hash
 
 
-def upload_chunk(file_path: Path, docker_tag: str, parent_file_path: Path, parent_file_hash: str, parent_file_size: int):
-    """Build, push, and delete a docker image
+def push_image(file_path: Path, tag_name: str, progress_bar_description: str, overwrite: bool = False):
+    """Pushes an image with a file to docker hub
 
     Args:
-        file_path: Path to the file to upload
-        docker_tag: Tag for the docker image
-        parent_file_path: Path to the parent file
-        parent_file_hash: SHA256 hash of the parent file
-        parent_file_size: Size in bytes of the parent file
+        file_path: The file to push
+        tag_name: The tag name
+        progress_bar_description: The tqdm progress bar description
     """
-    logger.debug(f'Creating and pushing docker image "{docker_tag}" from file {file_path}')
 
-    # Get file hash
-    chunk_hash = sha256_file_hash(file_path)
+    # Check for existing tags
+    chunk_digest = calculate_sha256_digest_from_file(file_path)
+    if (manifest := get_manifest(tag=tag_name)) is not None:
+        if manifest.layers[0].digest == chunk_digest:
+            print(f"Repository image {tag_name} already exists with matching SHA256 hash")
+            os.remove(file_path)
+            return None
+        if not overwrite:
+            raise ValueError(f"Remove image {tag_name} already exists, with different hash")
+        print(f"Overwriting image {tag_name}")
+
+    # Push blob config
+    blob = Blob(architecture="x86_64", os="linux", rootfs=BlobRootFS(type="layers"))
+    blob_size = len(blob.as_json_bytes())
+    blob_digest = blob.get_sha256_digest()
+    push_blob_config(blob=blob, digest=blob_digest)
+
+    # Push blob file (layer 1)
     chunk_size = os.path.getsize(file_path)
-
-    # Build/push docker image
-    subprocess.run(
-        "docker build "
-        f"--tag {docker_tag} "
-        f'--file "{DOCKERFILE_PATH}" '
-        f'--build-arg CHUNK_SIZE_BYTES="{chunk_size}" '
-        f'--build-arg CHUNK_SHA256_HASH="{chunk_hash}" '
-        f'--build-arg PARENT_FILE="{parent_file_path.name}" '
-        f'--build-arg PARENT_FILE_SHA256_HASH="{parent_file_hash}" '
-        f'--build-arg PARENT_FILE_SIZE_BYTES="{parent_file_size}" '
-        f'--progress {"auto" if config.show_docker_progress else "quiet"} '
-        "--push "
-        "--no-cache "
-        ".",
-        cwd=file_path.parent,
-        shell=True,
-        check=True,
+    push_blob_file(
+        file_path=file_path,
+        digest=chunk_digest,
+        timeout=100,
+        progress_bar_description=progress_bar_description,
     )
 
-    # Cleanup
-    logger.debug(f'Pushed image "{docker_tag}" to docker hub, deleting local image and chunk file')
-    subprocess.run(
-        f"docker image rm  --force {docker_tag}",
-        shell=True,
-        check=True,
+    # Push manifest (create tag)
+    manifest = Manifest(
+        schemaVersion=2,
+        mediaType="application/vnd.docker.distribution.manifest.v2+json",
+        config=ManifestConfig(
+            mediaType="application/vnd.docker.container.image.v1+json",
+            size=blob_size,
+            digest=blob_digest,
+        ),
+        layers=[
+            ManifestLayer(
+                mediaType="application/octet-stream",
+                size=chunk_size,
+                digest=chunk_digest,
+            )
+        ],
     )
+    push_manifest(manifest=manifest, tag=tag_name)
+
+    # Cleanup chunk
     os.remove(file_path)
 
 
-def upload_file_as_chunks(file_path: Path, chunk_size: int = DEFAULT_CHUNK_SIZE):
-    """Uploads a file as a series of chunked docker images
+def push_file_as_image_chunks(file_path: Path, chunk_size_bytes: int = DEFAULT_CHUNK_SIZE):
+    os.makedirs(CHUNK_DIRECTORY, mode=500, exist_ok=True)
+    parent_file_hash = sha256_file_hash(file_path=file_path, show_progress=True)
+    parent_file_size = os.path.getsize(file_path)
+    chunk_count = math.ceil(parent_file_size / chunk_size_bytes)
+    print(f"SHA256 hash: {parent_file_hash}")
+    print(f"File size: {humanize_bytes(parent_file_size)}")
 
-    Args:
-        file_path: Path to the file to upload
-        base_tag: The base tag for the docker images, "-<INDEX>" will be appended to the end
-        chunk_size: The size of chunks in bytes
-    """
-    # Calculate chunks
-    byte_count = os.path.getsize(file_path)
-    chunk_count = math.ceil(byte_count / chunk_size)
-
-    # Get file hash
-    hash = sha256_file_hash(file_path, show_progress=True)
-    logger.debug(f'File {file_path} has SHA256 hash: {hash}')
-
-    for index in tqdm(range(1, chunk_count + 1), desc=f"Uploading file {file_path.name}", unit="chunk"):
-        
-        # Define chunk vars
+    for index in range(1, chunk_count + 1):
         chunk_tag = f"{config.base_tag}-{index}"
-        chunk_path = CHUNK_DIRECTORY / chunk_tag.replace("/", "_").replace(":", "_")
-        byte_offset = (index - 1) * chunk_size
+        chunk_path = CHUNK_DIRECTORY / chunk_tag
+        byte_offset = (index - 1) * chunk_size_bytes
 
-        # Chunk file and upload image
         chunk_file(
-            input_file_path=file_path, output_file_path=chunk_path, read_bytes=chunk_size, byte_offset=byte_offset
+            input_file_path=file_path, output_file_path=chunk_path, read_bytes=chunk_size_bytes, byte_offset=byte_offset
         )
-        upload_chunk(file_path=chunk_path, docker_tag=chunk_tag, parent_file_path=file_path, parent_file_hash=hash, parent_file_size=byte_count)
+        push_image(
+            file_path=chunk_path,
+            tag_name=chunk_tag,
+            progress_bar_description=f"Uploading image {chunk_tag} ({index}/{chunk_count})",
+        )
