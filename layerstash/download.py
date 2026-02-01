@@ -1,6 +1,7 @@
 """Functions for downloading from docker hub"""
 
 # Standard libraries
+import os
 from pathlib import Path
 
 # Third-party libraries
@@ -39,6 +40,7 @@ def get_download_targets() -> list[DownloadTarget]:
 
 
 def download_file_from_images(out_file_path: Path):
+    os.makedirs(CHUNK_DIRECTORY, mode=500, exist_ok=True)
     print("Loading download targets")
     download_list = get_download_targets()
     total_size = 0
