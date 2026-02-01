@@ -5,11 +5,11 @@ import hashlib
 import os
 from pathlib import Path
 
-# Project libraries
-from layerstash.constants import DEFAULT_HASH_CHUNK_SIZE, DEFAULT_READER_CHUNK_SIZE
-
 # Third-party libraries
 from tqdm import tqdm
+
+# Project libraries
+from layerstash.constants import DEFAULT_HASH_CHUNK_SIZE, DEFAULT_READER_CHUNK_SIZE
 
 BYTE_SUFFIX_LIST = ["B", "KB", "MB", "GB", "TB", "PB"]
 
