@@ -11,6 +11,7 @@ from attrs import define, field, validators
 from layerstash.chunker import merge_file
 from layerstash.constants import CHUNK_DIRECTORY, config
 from layerstash.docker_api import DockerException, get_manifest, pull_blob_file
+from layerstash.docker_api_models import calculate_sha256_digest_from_file
 from layerstash.utils import humanize_bytes
 
 
@@ -53,6 +54,15 @@ def download_file_from_images(out_file_path: Path):
     for index, download in enumerate(download_list, start=1):
         chunk_path = CHUNK_DIRECTORY / f"{download.tag}"
         chunk_path_list.append(chunk_path)
+
+        # Check if chunk exists
+        if chunk_path.exists():
+            if calculate_sha256_digest_from_file(chunk_path) == download.digest:
+                print(f"Local chunk {chunk_path.name} matches remote sha256 hash, skipping download")
+                continue
+            else:
+                print(f"Local chunk {chunk_path.name} does not match remote sha256 hash, overwriting local chunk")
+
         pull_blob_file(
             file_path=chunk_path,
             digest=download.digest,
