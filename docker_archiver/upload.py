@@ -80,10 +80,8 @@ def push_image(file_path: Path, tag_name: str, progress_bar_description: str, ov
 
 def push_file_as_image_chunks(file_path: Path, chunk_size_bytes: int = DEFAULT_CHUNK_SIZE):
     os.makedirs(CHUNK_DIRECTORY, mode=500, exist_ok=True)
-    parent_file_hash = sha256_file_hash(file_path=file_path, show_progress=True)
     parent_file_size = os.path.getsize(file_path)
     chunk_count = math.ceil(parent_file_size / chunk_size_bytes)
-    print(f"SHA256 hash: {parent_file_hash}")
     print(f"File size: {humanize_bytes(parent_file_size)}")
 
     for index in range(1, chunk_count + 1):
