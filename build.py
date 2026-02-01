@@ -11,16 +11,16 @@ PARENT_DIRECTORY = Path(__file__).parent
 def build_linux():
     subprocess.run(
         "docker run --name nuitka-compiler --detach androsh7/nuitka-compiler:latest-x86_64-glibc-2.28-py3.13 sleep infinity "
-        "&& docker cp docker_archiver nuitka-compiler:/src/docker_archiver "
+        "&& docker cp layerstash nuitka-compiler:/src/layerstash "
         "&& docker cp pyproject.toml nuitka-compiler:/src/pyproject.toml "
         "&& docker exec nuitka-compiler python3 -m pip install . "
         "&& docker exec nuitka-compiler python3 -m nuitka "
         "   --standalone "
         "   --onefile "
-        "   --output-filename=/src/docker_archiver.bin "
-        "   /src/docker_archiver/main.py "
-        "   --onefile-tempdir-spec={HOME}/.docker_archiver_bin"
-        "&& docker cp nuitka-compiler:/src/docker_archiver.bin docker_archiver.bin "
+        "   --output-filename=/src/layerstash.bin "
+        "   /src/layerstash/main.py "
+        "   --onefile-tempdir-spec={HOME}/.layerstash"
+        "&& docker cp nuitka-compiler:/src/layerstash.bin layerstash.bin "
         "&& docker rm --force nuitka-compiler",
         cwd=PARENT_DIRECTORY,
         shell=True,
@@ -33,9 +33,9 @@ def build_windows():
         "nuitka "
         "--standalone "
         "--onefile "
-        "--output-filename=docker_archiver.exe "
-        "--onefile-tempdir-spec={HOME}/.docker_archiver_bin "
-        "docker_archiver/main.py",
+        "--output-filename=layerstash.exe "
+        "--onefile-tempdir-spec={HOME}/.layerstash "
+        "layerstash/main.py",
         cwd=PARENT_DIRECTORY,
         shell=True,
         check=True,

@@ -9,20 +9,20 @@ from pathlib import Path
 from loguru import logger
 
 # Project libraries
-from docker_archiver.constants import LOG_LEVELS, VERSION, config
-from docker_archiver.download import download_file_from_images
-from docker_archiver.upload import push_file_as_image_chunks
+from layerstash.constants import LOG_LEVELS, VERSION, config
+from layerstash.download import download_file_from_images
+from layerstash.upload import push_file_as_image_chunks
 
 
 def main():
     """Main logic"""
 
     # Primary parser
-    parser = argparse.ArgumentParser(prog="docker_archiver")
+    parser = argparse.ArgumentParser(prog="layerstash", description="Tool for storing file in docker hub image layers")
 
     # Common args
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument("--version", action="version", version=f"Docker Archiver v{VERSION}")
+    common_parser.add_argument("--version", action="version", version=f"layerstash v{VERSION}")
     common_parser.add_argument(
         "--log-level", type=str, choices=LOG_LEVELS, default="info", help="Set the application log level"
     )
@@ -42,7 +42,7 @@ def main():
 
     # Upload parser
     upload_parser = subparsers.add_parser(
-        "upload", parents=[common_parser], help="Upload a file as a series of images to docker hub"
+        "upload", parents=[common_parser], help="Upload a file as a series of chunked images to docker hub"
     )
     upload_parser.add_argument("-i", "--infile", required=True, type=Path, help="The file to upload")
     upload_parser.add_argument(

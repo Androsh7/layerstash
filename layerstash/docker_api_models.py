@@ -9,7 +9,7 @@ from pathlib import Path
 from attrs import asdict, define, field, validators
 
 # Project libraries
-from docker_archiver.utils import sha256_file_hash
+from layerstash.utils import sha256_file_hash
 
 
 def calculate_sha256_digest_from_bytes(byte_array: bytes):

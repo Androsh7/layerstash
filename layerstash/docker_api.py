@@ -10,9 +10,9 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 # Project libraries
-from docker_archiver.constants import DEFAULT_REQUESTS_TIMEOUT, config
-from docker_archiver.docker_api_models import Blob, Manifest
-from docker_archiver.utils import TqdmFileReader
+from layerstash.constants import DEFAULT_REQUESTS_TIMEOUT, config
+from layerstash.docker_api_models import Blob, Manifest
+from layerstash.utils import TqdmFileReader
 
 
 class DockerException(Exception):

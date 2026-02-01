@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 
 # Project libraries
-from docker_archiver.chunker import chunk_file
-from docker_archiver.constants import CHUNK_DIRECTORY, DEFAULT_CHUNK_SIZE, config
-from docker_archiver.docker_api import get_manifest, push_blob_config, push_blob_file, push_manifest
-from docker_archiver.docker_api_models import (
+from layerstash.chunker import chunk_file
+from layerstash.constants import CHUNK_DIRECTORY, DEFAULT_CHUNK_SIZE, config
+from layerstash.docker_api import get_manifest, push_blob_config, push_blob_file, push_manifest
+from layerstash.docker_api_models import (
     Blob,
     BlobRootFS,
     Manifest,
@@ -17,7 +17,7 @@ from docker_archiver.docker_api_models import (
     ManifestLayer,
     calculate_sha256_digest_from_file,
 )
-from docker_archiver.utils import humanize_bytes
+from layerstash.utils import humanize_bytes
 
 
 def push_image(file_path: Path, tag_name: str, progress_bar_description: str):

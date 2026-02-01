@@ -7,10 +7,10 @@ from pathlib import Path
 from attrs import define, field, validators
 
 # Project libraries
-from docker_archiver.chunker import merge_file
-from docker_archiver.constants import CHUNK_DIRECTORY, config
-from docker_archiver.docker_api import DockerException, get_manifest, pull_blob_file
-from docker_archiver.utils import humanize_bytes
+from layerstash.chunker import merge_file
+from layerstash.constants import CHUNK_DIRECTORY, config
+from layerstash.docker_api import DockerException, get_manifest, pull_blob_file
+from layerstash.utils import humanize_bytes
 
 
 @define
