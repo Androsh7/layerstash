@@ -1,6 +1,7 @@
 """Defines constants"""
 
 # Standard libraries
+import sys
 from pathlib import Path
 
 # Third-party libraries
@@ -8,8 +9,11 @@ from attrs import define, field, validators
 
 VERSION = "0.1.0"
 
-# Paths
-PARENT_DIRECTORY = Path(__file__).parent.parent
+# dynamically set directory paths for nuitka/dev setup
+if getattr(sys, "frozen", False):
+    PARENT_DIRECTORY = Path(sys.executable).resolve().parent
+else:
+    PARENT_DIRECTORY = Path(__file__).resolve().parent.parent
 CHUNK_DIRECTORY = PARENT_DIRECTORY / "chunks"
 DOCKERFILE_PATH = PARENT_DIRECTORY / "build.Dockerfile"
 
@@ -29,6 +33,7 @@ class Config:
     namespace: str = field(default="", validator=validators.instance_of(str))
     repository: str = field(default="", validator=validators.instance_of(str))
     base_tag: str = field(default="", validator=validators.instance_of(str))
+    overwrite_image: bool = field(default=False, validator=validators.instance_of(bool))
     docker_pat_token: str = field(default="", validator=validators.instance_of(str))
 
 

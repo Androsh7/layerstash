@@ -20,7 +20,7 @@ from docker_archiver.docker_api_models import (
 from docker_archiver.utils import humanize_bytes, sha256_file_hash
 
 
-def push_image(file_path: Path, tag_name: str, progress_bar_description: str, overwrite: bool = False):
+def push_image(file_path: Path, tag_name: str, progress_bar_description: str):
     """Pushes an image with a file to docker hub
 
     Args:
@@ -36,7 +36,8 @@ def push_image(file_path: Path, tag_name: str, progress_bar_description: str, ov
             print(f"Repository image {tag_name} already exists with matching SHA256 hash")
             os.remove(file_path)
             return None
-        if not overwrite:
+        if not config.overwrite_image:
+            os.remove(file_path)
             raise ValueError(f"Remove image {tag_name} already exists, with different hash")
         print(f"Overwriting image {tag_name}")
 

@@ -46,6 +46,7 @@ def main():
     download_parser.add_argument(
         "-o", "--outfile", required=True, type=Path, help="The file to write the downloaded chunks to"
     )
+    download_parser.add_argument("--overwrite", action="store_true", help="Overwrite existing images if they have a different hash")
     download_parser.add_argument("-n", "--namespace", required=True, type=str, help="Namespace for the docker account")
     download_parser.add_argument(
         "-r", "--repository", required=True, type=str, help="Name of the repository to download from"
@@ -70,6 +71,7 @@ def main():
     config.repository = args.repository
     config.base_tag = args.base_tag
     config.docker_pat_token = args.token
+    config.overwrite_image = args.overwrite
 
     if args.command == "upload":
         push_file_as_image_chunks(file_path=args.infile)

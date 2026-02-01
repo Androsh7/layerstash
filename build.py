@@ -19,6 +19,7 @@ def build_linux():
         "   --onefile "
         "   --output-filename=/src/docker_archiver.bin "
         "   /src/docker_archiver/main.py "
+        "   --onefile-tempdir-spec={HOME}/.docker_archiver_bin"
         "&& docker cp nuitka-compiler:/src/docker_archiver.bin docker_archiver.bin "
         "&& docker rm --force nuitka-compiler",
         cwd=PARENT_DIRECTORY,
@@ -32,6 +33,7 @@ def build_windows():
         "--standalone "
         "--onefile "
         "--output-filename=docker_archiver.exe "
+        "--onefile-tempdir-spec={HOME}/.docker_archiver_bin "
         "docker_archiver/main.py",
         cwd=PARENT_DIRECTORY,
         shell=True,
@@ -50,6 +52,8 @@ def main():
         build_windows()
     if args.linux or args.build_all:
         build_linux()
+    if not args.linux and not args.windows and not args.build_all:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
