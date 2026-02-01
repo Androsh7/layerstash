@@ -86,7 +86,7 @@ def get_blob_upload_url() -> str:
         allow_redirects=False,
     )
 
-    if location_response.status_code != 202:
+    if location_response.status_code != HTTPStatus.ACCEPTED:
         raise DockerException("Failed to initialize upload")
     if (location_url := location_response.headers.get("location")) is None:
         raise DockerException(f"Missing location header. Headers: {location_response.headers}")
@@ -109,7 +109,7 @@ def push_blob_config(blob: Blob, digest: str, timeout: int = DEFAULT_REQUESTS_TI
         timeout=timeout,
     )
 
-    if upload_response.status_code not in (201, 202):
+    if upload_response.status_code not in (HTTPStatus.CREATED, HTTPStatus.ACCEPTED):
         raise DockerException(f"Blob config upload failed: {upload_response.status_code} {upload_response.text}")
 
 
@@ -129,7 +129,7 @@ def push_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
         timeout=timeout,
     )
 
-    if upload_response.status_code not in (201, 202):
+    if upload_response.status_code not in (HTTPStatus.CREATED, HTTPStatus.ACCEPTED):
         raise DockerException(f"File upload failed: {upload_response.status_code} {upload_response.text}")
 
 
@@ -172,5 +172,5 @@ def push_manifest(manifest: Manifest, tag: str):
         data=manifest.as_json_bytes(),
     )
 
-    if response.status_code not in (201, 202):
+    if response.status_code not in (HTTPStatus.CREATED, HTTPStatus.ACCEPTED):
         raise DockerException(f"Manifest upload failed: {response.status_code} {response.text}")
