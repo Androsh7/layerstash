@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # Project libraries
-from constants import DEFAULT_HASH_CHUNK_SIZE
+from constants import DEFAULT_HASH_CHUNK_SIZE, DEFAULT_READER_CHUNK_SIZE
 
 # Third-party libraries
 from tqdm import tqdm
@@ -54,8 +54,8 @@ def sha256_file_hash(file_path: Path, show_progress: bool = False, chunk_size: i
 
 
 class TqdmFileReader:
-    def __init__(self, path: str, description: str, chunk_size: int = 1024 * 1024 * 16):
-        self.file = open(path, "rb")
+    def __init__(self, path: str, description: str, chunk_size: int = DEFAULT_READER_CHUNK_SIZE):
+        self.file = open(file=path, mode="rb")
         self.total = os.path.getsize(path)
         self.chunk_size = chunk_size
         self.progress_bar = tqdm(total=self.total, unit="B", unit_scale=True, unit_divisor=1024, desc=description)

@@ -20,6 +20,8 @@ DOCKERFILE_PATH = PARENT_DIRECTORY / "build.Dockerfile"
 # Chunking
 DEFAULT_CHUNK_SIZE = 1024 * 1024 * 1024 * 5  # 5GB
 DEFAULT_HASH_CHUNK_SIZE = 64 * 1024 * 1024  # 64MB
+DEFAULT_READER_CHUNK_SIZE = 1024 * 1024 * 16  # 16MB
+DEFAULT_WRITER_CHUNK_SIZE = 1024 * 1024 * 16  # 16MB
 
 # Logging
 LOG_LEVELS = ["trace", "debug", "info", "warning", "critical"]

@@ -10,7 +10,7 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 # Project libraries
-from layerstash.constants import DEFAULT_REQUESTS_TIMEOUT, config
+from layerstash.constants import DEFAULT_REQUESTS_TIMEOUT, DEFAULT_WRITER_CHUNK_SIZE, config
 from layerstash.docker_api_models import Blob, Manifest
 from layerstash.utils import TqdmFileReader
 
@@ -156,7 +156,7 @@ def pull_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
                 desc=progress_bar_description,
             ) as progress_bar,
         ):
-            for chunk in response.iter_content(chunk_size=16 * 1024 * 1024):
+            for chunk in response.iter_content(chunk_size=DEFAULT_WRITER_CHUNK_SIZE):
                 if chunk:
                     f.write(chunk)
                     progress_bar.update(len(chunk))
