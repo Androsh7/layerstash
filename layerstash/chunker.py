@@ -7,6 +7,9 @@ from pathlib import Path
 # Third-party libraries
 from loguru import logger
 
+# Project libraries
+from layerstash.utils import humanize_bytes
+
 
 def chunk_file(input_file_path: Path, output_file_path: Path, read_bytes: int, byte_offset: int):
     """Takes a specific byte range in a file and writes it to another file
@@ -17,7 +20,9 @@ def chunk_file(input_file_path: Path, output_file_path: Path, read_bytes: int, b
         read_bytes: The number of bytes to read
         byte_offset: The byte offset to start reading at
     """
-    logger.debug(f"Creating chunk {output_file_path} from {input_file_path} at byte offset {byte_offset}")
+    logger.debug(
+        f"Creating chunk {output_file_path} from {input_file_path} at byte offset {byte_offset} with size {humanize_bytes(read_bytes)}"
+    )
     with open(file=input_file_path, mode="rb") as input_file:
         input_file.seek(byte_offset)
         with open(file=output_file_path, mode="wb") as output_file:
@@ -31,6 +36,7 @@ def merge_file(input_file_path: Path, output_file_path: Path):
         input_file_path: The file to append to the output file
         output_file_path: The destination of the input bytes
     """
+    logger.debug(f"Merging chunk {input_file_path} into {output_file_path}")
     with open(file=input_file_path, mode="rb") as input_file:
         with open(file=output_file_path, mode="a+b") as output_file:
             output_file.write(input_file.read())

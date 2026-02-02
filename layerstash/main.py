@@ -9,7 +9,7 @@ from pathlib import Path
 from loguru import logger
 
 # Project libraries
-from layerstash.constants import LOG_LEVELS, VERSION, config
+from layerstash.constants import LOG_LEVELS, VERSION, config, endpoint_dict
 from layerstash.download import download_file_from_images
 from layerstash.upload import push_file_as_image_chunks
 
@@ -26,8 +26,9 @@ def main():
     common_parser.add_argument(
         "--log-level", type=str, choices=LOG_LEVELS, default="info", help="Set the application log level"
     )
-    common_parser.add_argument("-n", "--namespace", required=True, type=str, help="Namespace for the docker account")
-    common_parser.add_argument("-r", "--repository", required=True, type=str, help="Name of the remote repository")
+    common_parser.add_argument(
+        "-r", "--repository", required=True, type=str, help="Name of the remote repository, I.E: androsh7/archive"
+    )
     common_parser.add_argument(
         "-t",
         "--base-tag",
@@ -35,7 +36,14 @@ def main():
         type=str,
         help='The base tag, I.E: "python-ftp" , each chunk will have "-<INDEX>" appended to the end',
     )
-    common_parser.add_argument("--token", required=True, type=str, help="Docker PAT token")
+    common_parser.add_argument(
+        "--registry",
+        required=True,
+        type=str,
+        default="docker",
+        choices=list(endpoint_dict.keys()),
+        help=f'The registry to use {tuple(endpoint_dict.keys())}, default: "docker"',
+    )
 
     # Add subparsers
     subparsers = parser.add_subparsers(title="commands", dest="command", required=True)
@@ -48,6 +56,8 @@ def main():
     upload_parser.add_argument(
         "--overwrite", action="store_true", help="Overwrite existing images if they have a different hash"
     )
+    upload_parser.add_argument("-u", "--username", required=True, type=str, help="Docker username")
+    upload_parser.add_argument("-p", "--token", required=True, type=str, help="Docker PAT token")
 
     # Download parser
     download_parser = subparsers.add_parser(
@@ -56,6 +66,8 @@ def main():
     download_parser.add_argument(
         "-o", "--outfile", required=True, type=Path, help="The file to write the downloaded chunks to"
     )
+    download_parser.add_argument("-u", "--username", required=False, type=str, help="Docker username")
+    download_parser.add_argument("-p", "--token", required=False, type=str, help="Docker PAT token")
 
     args = parser.parse_args()
 
@@ -64,10 +76,18 @@ def main():
     logger.add(sys.stderr, level=args.log_level.upper())
 
     # Set the config
-    config.namespace = args.namespace
     config.repository = args.repository
     config.base_tag = args.base_tag
-    config.docker_pat_token = args.token
+
+    # Set login details
+    if args.token or args.username:
+        config.pat_token = args.token
+        config.username = args.username
+        if not args.token or not args.username:
+            parser.error("Username or token is missing")
+
+    # Set endpoint
+    config.endpoints = endpoint_dict[args.registry]
 
     if args.command == "upload":
         config.overwrite_image = args.overwrite
