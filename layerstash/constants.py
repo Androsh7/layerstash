@@ -26,6 +26,17 @@ DEFAULT_WRITER_CHUNK_SIZE = 1024 * 1024 * 16  # 16MB
 # Logging
 LOG_LEVELS = ["trace", "debug", "info", "warning", "critical"]
 
+# Retries
+RETRIES = (
+    15,  # 15 seconds
+    30,  # 30 seconds
+    60 * 1,  # 1 minute
+    60 * 5,  # 5 minutes
+    60 * 15,  # 15 minutes
+    60 * 30,  # 30 minutes
+    None,
+)
+
 # Requests
 DEFAULT_REQUESTS_TIMEOUT = 10
 

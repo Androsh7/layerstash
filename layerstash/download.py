@@ -2,17 +2,20 @@
 
 # Standard libraries
 import os
+from http import HTTPStatus
 from pathlib import Path
+from time import sleep
 
 # Third-party libraries
 from attrs import define, field, validators
+from requests.exceptions import HTTPError
 
 # Project libraries
 from layerstash.chunker import merge_file
-from layerstash.constants import CHUNK_DIRECTORY, config
+from layerstash.constants import CHUNK_DIRECTORY, RETRIES, config
 from layerstash.docker_api import DockerException, get_manifest, pull_blob_file
 from layerstash.docker_api_models import calculate_sha256_digest_from_file
-from layerstash.utils import humanize_bytes
+from layerstash.utils import humanize_bytes, humanize_seconds
 
 
 @define
@@ -63,12 +66,24 @@ def download_file_from_images(out_file_path: Path):
             else:
                 print(f"Local chunk {chunk_path.name} does not match remote sha256 hash, overwriting local chunk")
 
-        pull_blob_file(
-            file_path=chunk_path,
-            digest=download.digest,
-            timeout=9000,
-            progress_bar_description=f"Downloading {download.tag} ({index}/{len(download_list)})",
-        )
+        # Pull blob with retries
+        for retry_seconds in RETRIES:
+            try:
+                pull_blob_file(
+                    file_path=chunk_path,
+                    digest=download.digest,
+                    timeout=9000,
+                    progress_bar_description=f"Downloading {download.tag} ({index}/{len(download_list)})",
+                )
+            except HTTPError as ex:
+                if ex.response.status_code == HTTPStatus.BAD_GATEWAY and retry_seconds is not None:
+                    print(
+                        f"pull_blob_file() encountered bad gateway HTTP error, retrying in {humanize_seconds(retry_seconds)}"
+                    )
+                    sleep(retry_seconds)
+                    continue
+                raise
+            break
 
     for chunk_path in chunk_path_list:
         merge_file(

@@ -25,6 +25,21 @@ def humanize_bytes(byte_count: int) -> str:
     return f"{value:.2f}EB"
 
 
+def humanize_seconds(total_seconds: int) -> str:
+    """Returns a number of seconds as a human readable string, I.E: '2 hours 46 minutes 40 seconds '"""
+    out_string = ""
+    seconds = total_seconds % 60
+    hour_in_seconds = ((total_seconds - seconds) // 3600) * 3600
+    minute_in_seconds = ((total_seconds - hour_in_seconds - seconds) // 60) * 60
+    if hour_in_seconds:
+        out_string += f"{hour_in_seconds // 3600} hour{'s' if hour_in_seconds > 3600 else ''} "
+    if minute_in_seconds:
+        out_string += f"{minute_in_seconds // 60} minute{'s' if minute_in_seconds > 60 else ''} "
+    if seconds:
+        out_string += f"{seconds} second{'s' if seconds > 1 else ''} "
+    return out_string
+
+
 def sha256_file_hash(file_path: Path, show_progress: bool = False, chunk_size: int = DEFAULT_HASH_CHUNK_SIZE) -> str:
     """Returns the sha256 hash of a file"""
     hash = hashlib.sha256()
@@ -37,14 +52,16 @@ def sha256_file_hash(file_path: Path, show_progress: bool = False, chunk_size: i
             total=file_size, unit="B", unit_scale=True, unit_divisor=1024, desc=f"Hashing file {file_path.name}"
         )
 
+    chunk_buffer = bytearray(chunk_size)
+    memory_view = memoryview(chunk_buffer)
     with open(file=file_path, mode="rb", buffering=0) as file:
         while True:
-            chunk = file.read(chunk_size)
-            if not chunk:
+            chunk_size = file.readinto(chunk_buffer)
+            if not chunk_size:
                 break
-            hash.update(chunk)
+            hash.update(memory_view[:chunk_size])
             if progress_bar is not None:
-                progress_bar.update(len(chunk))
+                progress_bar.update(len(chunk_size))
 
     if progress_bar is not None:
         progress_bar.close()
