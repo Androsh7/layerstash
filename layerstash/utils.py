@@ -2,10 +2,13 @@
 
 # Standard libraries
 import hashlib
+import io
 import os
 from pathlib import Path
 
 # Third-party libraries
+from attrs import define, field, validators
+from loguru import logger
 from tqdm import tqdm
 
 # Project libraries
@@ -36,56 +39,91 @@ def humanize_seconds(total_seconds: int) -> str:
     if minute_in_seconds:
         out_string += f"{minute_in_seconds // 60} minute{'s' if minute_in_seconds > 60 else ''} "
     if seconds:
-        out_string += f"{seconds} second{'s' if seconds > 1 else ''} "
+        out_string += f"{int(seconds)} second{'s' if seconds > 1 else ''} "
     return out_string
 
 
-def sha256_file_hash(file_path: Path, show_progress: bool = False, chunk_size: int = DEFAULT_HASH_CHUNK_SIZE) -> str:
+def get_sha256_file_hash(
+    file_path: Path, byte_offset: int = 0, byte_count: int = None, hash_chunk_size: int = DEFAULT_HASH_CHUNK_SIZE
+) -> str:
     """Returns the sha256 hash of a file"""
     hash = hashlib.sha256()
-    file_size = os.path.getsize(file_path)
+    if byte_count is None:
+        byte_count = os.path.getsize(file_path)
+    remaining_bytes = byte_count
 
-    # Create the tqdm iterator to show progress visually
-    progress_bar = None
-    if show_progress:
-        progress_bar = tqdm(
-            total=file_size, unit="B", unit_scale=True, unit_divisor=1024, desc=f"Hashing file {file_path.name}"
-        )
+    buffer = bytearray(min(hash_chunk_size, byte_count))
+    mv = memoryview(buffer)
 
-    chunk_buffer = bytearray(chunk_size)
-    memory_view = memoryview(chunk_buffer)
     with open(file=file_path, mode="rb", buffering=0) as file:
+        file.seek(byte_offset)
         while True:
-            chunk_size = file.readinto(chunk_buffer)
-            if not chunk_size:
+            bytes_to_read = min(remaining_bytes, len(buffer))
+            if bytes_to_read == 0:
                 break
-            hash.update(memory_view[:chunk_size])
-            if progress_bar is not None:
-                progress_bar.update(len(chunk_size))
 
-    if progress_bar is not None:
-        progress_bar.close()
+            read_bytes = file.readinto(mv[:bytes_to_read])
+            if read_bytes == 0:
+                break
+            hash.update(mv[:read_bytes])
+            remaining_bytes -= read_bytes
+
+    logger.debug(
+        f"Calculated {hash.hexdigest()} SHA256 hash for file {file_path} at byte offset {byte_offset} for {byte_count} bytes"
+    )
     return hash.hexdigest()
 
 
+@define
 class TqdmFileReader:
-    def __init__(self, path: str, description: str, chunk_size: int = DEFAULT_READER_CHUNK_SIZE):
-        self.file = open(file=path, mode="rb")
-        self.total = os.path.getsize(path)
-        self.chunk_size = chunk_size
-        self.progress_bar = tqdm(total=self.total, unit="B", unit_scale=True, unit_divisor=1024, desc=description)
+    path: Path = field(validator=validators.instance_of(Path))
+    byte_offset: int = field(validator=validators.and_(validators.instance_of(int), validators.ge(0)))
+    byte_count: int = field(validator=validators.and_(validators.instance_of(int), validators.ge(1)))
+    description: str = field(validator=validators.instance_of(str))
+    chunk_size: int = field(
+        default=DEFAULT_READER_CHUNK_SIZE, validator=validators.and_(validators.instance_of(int), validators.ge(1))
+    )
+    _file: io.IOBase = field(validator=validators.instance_of(io.IOBase), init=False)
+    _progress_bar: tqdm = field(validator=validators.instance_of(tqdm), init=False)
+    _remaining_bytes: int = field(validator=validators.instance_of(int), init=False)
+
+    def __attrs_post_init__(
+        self,
+    ):
+        self._file = open(file=self.path, mode="rb")
+        self._file.seek(self.byte_offset)
+        self._remaining_bytes = self.byte_count
+        self._progress_bar = tqdm(
+            total=self.byte_count, unit="B", unit_scale=True, unit_divisor=1024, desc=self.description
+        )
 
     def __len__(self):
-        return self.total
+        return self.byte_count
 
     def read(self, size=-1):
-        data = self.file.read(self.chunk_size if size in (-1, None) else size)
-        if data:
-            self.progress_bar.update(len(data))
+        # Return empty bytes object to show EOF
+        if self._remaining_bytes <= 0:
+            return b""
+
+        # Calculate bytes to read
+        if size is None or size < 0:
+            bytes_to_read = min(self._remaining_bytes, self.chunk_size)
+        else:
+            if size == 0:
+                return b""
+            bytes_to_read = min(self._remaining_bytes, size)
+
+        # Read bytes
+        data = self._file.read(bytes_to_read)
+        if len(data) < bytes_to_read:
+            raise EOFError("Unexpected EOF in read buffer")
+
+        self._progress_bar.update(bytes_to_read)
+        self._remaining_bytes -= bytes_to_read
         return data
 
     def close(self):
         try:
-            self.file.close()
+            self._file.close()
         finally:
-            self.progress_bar.close()
+            self._progress_bar.close()

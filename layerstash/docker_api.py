@@ -12,7 +12,11 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 # Project libraries
-from layerstash.constants import DEFAULT_REQUESTS_TIMEOUT, DEFAULT_WRITER_CHUNK_SIZE, config
+from layerstash.constants import (
+    DEFAULT_REQUESTS_TIMEOUT,
+    DEFAULT_WRITER_CHUNK_SIZE,
+    config,
+)
 from layerstash.docker_api_models import Blob, Manifest
 from layerstash.utils import TqdmFileReader
 
@@ -56,6 +60,26 @@ def get_docker_push_token() -> str:
     response.raise_for_status()
 
     return response.json()["token"]
+
+
+def get_tag_list(base_tag: str = None) -> list[str]:
+    """Returns a list of tags with a matching base tag"""
+    url = f"{config.endpoints.registry_endpoint}/{config.repository}/tags/list"
+    response = requests.get(
+        url=url,
+        timeout=DEFAULT_REQUESTS_TIMEOUT,
+        headers={"Authorization": f"Bearer {get_docker_pull_token()}"},
+    )
+    logger.debug(f"{url} {response}\n{response.text}")
+    response.raise_for_status()
+    tag_list = []
+    for tag in response.json()["tags"]:
+        if base_tag is None:
+            tag_list.append(tag)
+        elif base_tag in tag:
+            tag_list.append(tag)
+    tag_list.sort(key=lambda tag: int(tag.rsplit("-", 1)[1]))
+    return tag_list
 
 
 def get_manifest(tag: str) -> Manifest | None:
@@ -108,7 +132,7 @@ def get_blob_upload_url() -> str:
     return urljoin(config.endpoints.registry_endpoint, location_url)
 
 
-def push_blob_config(blob: Blob, digest: str, timeout: int = DEFAULT_REQUESTS_TIMEOUT):
+def push_blob_config(blob: Blob, digest: str):
     """Pushes the blob config to the repository"""
     upload_url = get_blob_upload_url()
     upload_response = requests.put(
@@ -121,7 +145,7 @@ def push_blob_config(blob: Blob, digest: str, timeout: int = DEFAULT_REQUESTS_TI
             "digest": digest,
         },
         data=blob.as_json_bytes(),
-        timeout=timeout,
+        timeout=DEFAULT_REQUESTS_TIMEOUT,
     )
 
     logger.debug(f"{upload_url} {upload_response}\n{upload_response.text}")
@@ -129,13 +153,21 @@ def push_blob_config(blob: Blob, digest: str, timeout: int = DEFAULT_REQUESTS_TI
         raise DockerException(f"Blob config upload failed: {upload_response.status_code} {upload_response.text}")
 
 
-def push_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_description: str):
+def push_blob_file(
+    file_path: Path,
+    byte_offset: int,
+    byte_count: int,
+    digest: str,
+    progress_bar_description: str,
+):
     """Pushes a layer to the repository"""
     url = get_blob_upload_url()
     params = {
         "digest": digest,
     }
-    tqdm_file_reader = TqdmFileReader(path=file_path, description=progress_bar_description)
+    tqdm_file_reader = TqdmFileReader(
+        path=file_path, byte_offset=byte_offset, byte_count=byte_count, description=progress_bar_description
+    )
     logger.debug(f"{url} {params} starting transfer of {file_path} with digest {digest}")
     upload_response = requests.put(
         url=url,
@@ -145,7 +177,7 @@ def push_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
         },
         params=params,
         data=tqdm_file_reader,
-        timeout=timeout,
+        timeout=DEFAULT_REQUESTS_TIMEOUT,
     )
     tqdm_file_reader.close()
     logger.debug(f"{url} {params} {upload_response}\n{upload_response.text}")
@@ -154,7 +186,7 @@ def push_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
         raise DockerException(f"File upload failed: {upload_response.status_code} {upload_response.text}")
 
 
-def pull_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_description: str):
+def pull_blob_file(file_path: Path, byte_offset: int, digest: str, progress_bar_description: str):
     url = f"{config.endpoints.registry_endpoint}/{config.repository}/blobs/{digest}"
     logger.debug(f"{url} Starting download")
     with requests.get(
@@ -163,14 +195,14 @@ def pull_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
             "Authorization": f"Bearer {get_docker_pull_token()}",
         },
         stream=True,
-        timeout=timeout,
+        timeout=DEFAULT_REQUESTS_TIMEOUT,
     ) as response:
         response.raise_for_status()
 
         total = int(response.headers.get("Content-Length", 0))
 
         with (
-            open(file=file_path, mode="wb") as f,
+            open(file=file_path, mode="r+b") as file,
             tqdm(
                 total=total,
                 unit="B",
@@ -179,12 +211,14 @@ def pull_blob_file(file_path: Path, digest: str, timeout: int, progress_bar_desc
                 desc=progress_bar_description,
             ) as progress_bar,
         ):
-            for chunk in response.iter_content(chunk_size=DEFAULT_WRITER_CHUNK_SIZE):
-                if chunk:
-                    f.write(chunk)
-                    progress_bar.update(len(chunk))
+            file.seek(byte_offset)
+            for chunk in response.raw.stream(DEFAULT_WRITER_CHUNK_SIZE, decode_content=False):
+                if not chunk:
+                    continue
+                file.write(chunk)
+                progress_bar.update(len(chunk))
 
-    logger.debug(f"{url} {response}\n{response.text}")
+    logger.debug(f"{url} {response}")
 
 
 def push_manifest(manifest: Manifest, tag: str):

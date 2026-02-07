@@ -1,25 +1,15 @@
 """Defines constants"""
 
 # Standard libraries
-import sys
-from pathlib import Path
 
 # Third-party libraries
 from attrs import define, field, validators
 
 VERSION = "0.1.0"
 
-# dynamically set directory paths for nuitka/dev setup
-if getattr(sys, "frozen", False):
-    PARENT_DIRECTORY = Path(sys.executable).resolve().parent
-else:
-    PARENT_DIRECTORY = Path(__file__).resolve().parent.parent
-CHUNK_DIRECTORY = PARENT_DIRECTORY / "chunks"
-DOCKERFILE_PATH = PARENT_DIRECTORY / "build.Dockerfile"
-
 # Chunking
 DEFAULT_CHUNK_SIZE = 1024 * 1024 * 1024 * 5  # 5GB
-DEFAULT_HASH_CHUNK_SIZE = 1024 * 1024 * 64  # 64MB
+DEFAULT_HASH_CHUNK_SIZE = 1024 * 1024 * 16  # 16MB
 DEFAULT_READER_CHUNK_SIZE = 1024 * 1024 * 16  # 16MB
 DEFAULT_WRITER_CHUNK_SIZE = 1024 * 1024 * 16  # 16MB
 

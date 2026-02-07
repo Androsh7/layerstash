@@ -9,15 +9,15 @@ from pathlib import Path
 from attrs import asdict, define, field, validators
 
 # Project libraries
-from layerstash.utils import sha256_file_hash
+from layerstash.utils import get_sha256_file_hash
 
 
 def calculate_sha256_digest_from_bytes(byte_array: bytes):
     return f"sha256:{hashlib.sha256(byte_array).hexdigest()}"
 
 
-def calculate_sha256_digest_from_file(file_path: Path) -> str:
-    return f"sha256:{sha256_file_hash(file_path)}"
+def calculate_sha256_digest_from_file(file_path: Path, byte_offset: int, byte_count: int) -> str:
+    return f"sha256:{get_sha256_file_hash(file_path=file_path, byte_offset=byte_offset, byte_count=byte_count)}"
 
 
 @define
