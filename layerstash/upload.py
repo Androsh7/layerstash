@@ -38,10 +38,8 @@ def push_image(file_path: Path, byte_offset: int, byte_count: int, tag_name: str
     if (manifest := get_manifest(tag=tag_name)) is not None:
         if manifest.layers[0].digest == chunk_digest:
             print(f"Repository image {tag_name} already exists with matching SHA256 hash")
-            os.remove(file_path)
             return None
         if not config.overwrite_image:
-            os.remove(file_path)
             raise ValueError(f"Remote image {tag_name} already exists, with different hash")
         print(f"Overwriting image {tag_name}")
 
