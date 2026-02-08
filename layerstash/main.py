@@ -19,6 +19,7 @@ def main():
 
     # Primary parser
     parser = argparse.ArgumentParser(prog="layerstash", description="Tool for storing file in docker hub image layers")
+    subparsers = parser.add_subparsers(title="commands", dest="command", required=True)
 
     # Common args
     common_parser = argparse.ArgumentParser(add_help=False)
@@ -38,15 +39,11 @@ def main():
     )
     common_parser.add_argument(
         "--registry",
-        required=True,
         type=str,
         default="docker",
         choices=list(endpoint_dict.keys()),
         help=f'The registry to use {tuple(endpoint_dict.keys())}, default: "docker"',
     )
-
-    # Add subparsers
-    subparsers = parser.add_subparsers(title="commands", dest="command", required=True)
 
     # Upload parser
     upload_parser = subparsers.add_parser(
