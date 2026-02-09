@@ -31,6 +31,7 @@ def build_linux():
 def build_windows():
     subprocess.run(
         "nuitka "
+        "--assume-yes-for-downloads "
         "--standalone "
         "--onefile "
         "--output-filename=layerstash.exe "
