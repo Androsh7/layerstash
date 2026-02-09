@@ -25,7 +25,6 @@ usage: layerstash download [-h] [--version] [--log-level {trace,debug,info,warni
 
 options:
   -h, --help            show this help message and exit
-  --version             show program's version number and exit
   --log-level {trace,debug,info,warning,critical}
                         Set the application log level
   -r, --repository REPOSITORY
@@ -61,7 +60,6 @@ usage: layerstash upload [-h] [--version] [--log-level {trace,debug,info,warning
 
 options:
   -h, --help            show this help message and exit
-  --version             show program's version number and exit
   --log-level {trace,debug,info,warning,critical}
                         Set the application log level
   -r, --repository REPOSITORY

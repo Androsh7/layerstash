@@ -19,11 +19,11 @@ def main():
 
     # Primary parser
     parser = argparse.ArgumentParser(prog="layerstash", description="Tool for storing file in docker hub image layers")
+    parser.add_argument("--version", action="version", version=f"layerstash v{VERSION}")
     subparsers = parser.add_subparsers(title="commands", dest="command", required=True)
 
     # Common args
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument("--version", action="version", version=f"layerstash v{VERSION}")
     common_parser.add_argument(
         "--log-level", type=str, choices=LOG_LEVELS, default="info", help="Set the application log level"
     )
