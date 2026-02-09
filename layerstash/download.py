@@ -22,7 +22,7 @@ def download_file_from_images(out_file_path: Path):
     tag_list = get_tag_list(config.base_tag)
     print(f"File: {out_file_path}")
     print(f"Total chunks: {len(tag_list)}")
-    
+
     # Create the file if it doesn't exist
     if not os.path.exists(out_file_path):
         out_file_path.touch()
