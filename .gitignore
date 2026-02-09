@@ -1,0 +1,19 @@
+# VSCode
+.vscode/
+
+# Python
+__pycache__/
+build/
+*.egg-info
+.venv/
+
+# Nuitka
+*.build
+*.onefile-build
+*.dist
+*.bin
+*.exe
+
+# Project
+chunks/
+*.tar
