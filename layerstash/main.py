@@ -28,14 +28,14 @@ def main():
         "--log-level", type=str, choices=LOG_LEVELS, default="info", help="Set the application log level"
     )
     common_parser.add_argument(
-        "-r", "--repository", required=True, type=str, help="Name of the remote repository, I.E: androsh7/archive"
+        "-r", "--repository", required=True, type=str, help="Name of the remote repository, i.e., androsh7/archive"
     )
     common_parser.add_argument(
         "-t",
         "--base-tag",
         required=True,
         type=str,
-        help='The base tag, I.E: "python-ftp" , each chunk will have "-<INDEX>" appended to the end',
+        help='The base tag, i.e., "python-ftp" , each chunk will have "-<INDEX>" appended to the end',
     )
     common_parser.add_argument(
         "--registry",

@@ -45,9 +45,9 @@ def build_windows():
 def main():
     """Main logic"""
     parser = argparse.ArgumentParser(prog="build.py")
-    parser.add_argument("--windows", action="store_true", help="Build the windows executable")
-    parser.add_argument("--linux", action="store_true", help="Build the linux executable")
-    parser.add_argument("--build-all", action="store_true", help="Build the windows and linux executable")
+    parser.add_argument("--windows", action="store_true", help="Build the Windows executable")
+    parser.add_argument("--linux", action="store_true", help="Build the Linux executable")
+    parser.add_argument("--build-all", action="store_true", help="Build the Windows and Linux executable")
     args = parser.parse_args()
 
     if args.windows or args.build_all:
