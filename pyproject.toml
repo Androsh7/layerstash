@@ -16,9 +16,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "nuitka[onefile]",
+    "nuitka",
     "pytest",
     "ruff",
+    "zstandard",
 ]
 
 [tool.ruff]
