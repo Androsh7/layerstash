@@ -14,7 +14,7 @@ def build_linux():
         "&& docker cp layerstash nuitka-compiler:/src/layerstash "
         "&& docker cp pyproject.toml nuitka-compiler:/src/pyproject.toml "
         "&& docker exec nuitka-compiler python3 -m pip install . "
-        "&& docker exec nuitka-compiler python3 -m nuitka "
+        "&& docker exec nuitka-compiler python3 -m nuitka[onefile] "
         "   --standalone "
         "   --onefile "
         "   --output-filename=/src/layerstash.bin "
