@@ -1,7 +1,5 @@
 """Defines constants"""
 
-# Standard libraries
-
 # Third-party libraries
 from attrs import define, field, validators
 

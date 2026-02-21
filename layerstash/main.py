@@ -11,8 +11,8 @@ from loguru import logger
 # Project libraries
 from layerstash.constants import LOG_LEVELS, VERSION, config, endpoint_dict
 from layerstash.download import download_file_from_images
-from layerstash.upload import push_file_as_image_chunks
 from layerstash.list_files import list_files
+from layerstash.upload import push_file_as_image_chunks
 
 
 def main():
@@ -74,7 +74,9 @@ def main():
 
     # List files parser
     list_files_parser = subparsers.add_parser(
-        "list", parents=[common_parser], help="Lists files",
+        "list",
+        parents=[common_parser],
+        help="Lists files",
     )
     list_files_parser.add_argument("--exact-size", action="store_true", help="Returns the exact size of the files")
 
@@ -107,6 +109,7 @@ def main():
         download_file_from_images(out_file_path=args.outfile)
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()
