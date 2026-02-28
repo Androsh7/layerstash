@@ -10,11 +10,14 @@ PARENT_DIRECTORY = Path(__file__).parent
 
 def build_linux():
     subprocess.run(
+        "docker rm --force nuitka-compiler", cwd=PARENT_DIRECTORY, shell=True, check=False
+    )
+    subprocess.run(
         "docker run --name nuitka-compiler --detach androsh7/nuitka-compiler:latest-x86_64-glibc-2.28-py3.13 sleep infinity "
         "&& docker cp layerstash nuitka-compiler:/src/layerstash "
         "&& docker cp pyproject.toml nuitka-compiler:/src/pyproject.toml "
-        "&& docker exec nuitka-compiler python3 -m pip install . "
-        "&& docker exec nuitka-compiler python3 -m nuitka zstandard "
+        "&& docker exec nuitka-compiler python3 -m pip install .[dev] "
+        "&& docker exec nuitka-compiler python3 -m nuitka "
         "   --standalone "
         "   --onefile "
         "   --output-filename=/src/layerstash.bin "
