@@ -1,11 +1,9 @@
 """Defines constants"""
 
-# Standard libraries
-
 # Third-party libraries
 from attrs import define, field, validators
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 # Chunking
 DEFAULT_CHUNK_SIZE = 1024 * 1024 * 1024 * 5  # 5GB
