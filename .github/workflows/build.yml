@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir dist
           pip install .[dev]
-          python build.py --windows
+          python compile_script.py --windows
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build
         run: |
-          python build.py --linux
+          python compile_script.py --linux
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
