@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "layerstash"
-version = "0.2.0"
+version = "1.0.0"
 description = "Tools for archiving files to docker hub"
-requires-python = ">=3.13"
+readme = "README.md"
+requires-python = ">=3.10"
 dependencies = [
     "attrs",
     "loguru",
@@ -16,14 +17,16 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "build",
     "nuitka",
     "pytest",
     "ruff",
+    "twine",
     "zstandard",
 ]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py310"
 line-length = 120
 select = [
     "E", # Pycodestyle errors
@@ -38,3 +41,6 @@ max-line-length = 120
 
 [tool.setuptools]
 packages = ["layerstash"]
+
+[project.scripts]
+layerstash = "layerstash.main:main"
